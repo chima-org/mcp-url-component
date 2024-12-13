@@ -41,7 +41,7 @@ class JiraComponent(Component):
         MessageTextInput(
             name="project_ids",
             display_name="Jira Project IDs",
-            info="The IDs of the Jira projects to fetch project details from",
+            info="The IDs of the Jira projects to fetch issue details from",
         ),
     ]
 
@@ -87,12 +87,7 @@ class JiraComponent(Component):
     def list_projects(self, project_id: str) -> Message:
         async def _list_projects() -> str:
             """List all Jira projects"""
-            async with sse_client(
-                "http://localhost:3001/sse",
-                headers={
-                    "Authorization": f"Bearer {self.inputs['jira_api_token'].get_secret_value()}"
-                },
-            ) as streams:
+            async with sse_client("http://localhost:3001/sse") as streams:
                 async with ClientSession(
                     streams[0], streams[1], timedelta(seconds=3)
                 ) as session:
