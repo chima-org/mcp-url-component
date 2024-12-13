@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 
 from mcp.client.sse import sse_client
 from mcp.client.session import ClientSession
@@ -35,11 +36,16 @@ class URLComponent(Component):
 
     async def _fetch_url(self, url: str) -> str:
         """Fetch the content of a URL with a rate limit of 150,000 characters"""
-        async with sse_client("http://localhost:3000/message") as streams:
-            async with ClientSession(streams[0], streams[1]) as session:
-                await session.initialize()
-                result = await session.call_tool("fetch", {"url": url})
-                return result.content[0].text[:150_000]  # rate limit
+        async with sse_client("http://localhost:3000/sse") as streams:
+            async with ClientSession(
+                streams[0], streams[1], timedelta(seconds=10)
+            ) as session:
+                try:
+                    await session.initialize()
+                    result = await session.call_tool("fetch", {"url": url})
+                    return result.content[0].text[:150_000]  # rate limit
+                except Exception as e:
+                    return f"Error: {e}"
 
     def build_output(self, url: str) -> Message:
         """Build the output of the URL component"""
